@@ -2,70 +2,35 @@
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Gör sidan responsiv på mobil -->
   <title>Copilot Chat med SSO</title>
   <style>
-    /* Stil för den anpassade chattikonen */
-    .chat-icon {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 60px;
-      height: 60px;
-      background-color: #0078D7;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 28px;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 10000;
-    }
-    /* Stil för modal chattfönstret */
-    .chat-modal {
-      display: none; /* Dölj modal tills den aktiveras */
-      position: fixed;
-      bottom: 90px;
-      right: 20px;
-      width: 350px;
-      height: 500px;
-      background-color: #fff;
+    /* Huvudcontainer för chatten */
+    .chat-container {
+      max-width: 600px;          /* Maxbredd på större skärmar */
+      width: 80%;                /* Standardbredd */
+      height: 70vh;             /* Höjd i förhållande till skärmens höjd */
+      margin: 40px auto;        /* Centrerar containern horisontellt och ger top-marginal */
       border: 1px solid #ccc;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-      z-index: 9999;
+      background-color: #fff;
+      border-radius: 5px;       /* Lätt rundade hörn */
+      position: relative;
     }
-    .chat-modal iframe {
+    /* Själva iframen */
+    .chat-container iframe {
       width: 100%;
       height: 100%;
       border: none;
+      border-radius: 5px;
     }
-    .close-btn {
-      position: absolute;
-      top: 5px;
-      right: 10px;
-      font-size: 24px;
-      color: #aaa;
-      cursor: pointer;
-      z-index: 10001;
-    }
-    .close-btn:hover {
-      color: #000;
-    }
-    /* Responsiv design för mobila enheter */
+
+    /* Anpassning för mindre skärmar (mobiler) */
     @media only screen and (max-width: 600px) {
-      .chat-modal {
-        bottom: 10px;
-        right: 5%;
+      .chat-container {
         width: 90%;
-        height: 70%;
-      }
-      .chat-icon {
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
-        bottom: 10px;
-        right: 10px;
+        height: 60vh;
+        margin-top: 20px;
       }
     }
   </style>
@@ -74,12 +39,8 @@
 </head>
 <body>
 
-  <!-- Chattikon (här med en emoji) -->
-  <div class="chat-icon" onclick="toggleChat()">💬</div>
-
-  <!-- Modal fönster med inbäddad Copilot Studio-agent -->
-  <div id="chatModal" class="chat-modal">
-    <span class="close-btn" onclick="toggleChat()">&times;</span>
+  <!-- Container för chatten -->
+  <div class="chat-container">
     <iframe id="chatFrame" src="" frameborder="0"></iframe>
   </div>
 
@@ -131,14 +92,8 @@
       // Om du behöver skicka med tokenEndpointURL, gör så här (ta bort kommentaren om det behövs)
       // chatUrl += `&tokenEndpoint=${encodeURIComponent(tokenEndpointURL)}`;
       
-      // Sätt iframes src-attribut så att agenten laddas i modal-fönstret
+      // Sätt iframes src-attribut så att agenten laddas i container-fönstret
       document.getElementById("chatFrame").src = chatUrl;
-    }
-
-    // Funktion för att visa/dölja modal-fönstret
-    function toggleChat() {
-      var modal = document.getElementById("chatModal");
-      modal.style.display = (modal.style.display === "block") ? "none" : "block";
     }
 
     // Starta SSO- och agent-inställningen
