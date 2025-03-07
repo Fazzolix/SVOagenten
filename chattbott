@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <title>Copilot Chat med SSO</title>
+  <style>
+    /* Stil för den anpassade chattikonen */
+    .chat-icon {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background-color: #0078D7;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 10000;
+    }
+    /* Stil för modal chattfönstret */
+    .chat-modal {
+      display: none; /* Dölj modal tills den aktiveras */
+      position: fixed;
+      bottom: 90px;
+      right: 20px;
+      width: 350px;
+      height: 500px;
+      background-color: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 9999;
+    }
+    .chat-modal iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .close-btn {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      font-size: 24px;
+      color: #aaa;
+      cursor: pointer;
+      z-index: 10001;
+    }
+    .close-btn:hover {
+      color: #000;
+    }
+    /* Responsiv design för mobila enheter */
+    @media only screen and (max-width: 600px) {
+      .chat-modal {
+        bottom: 10px;
+        right: 5%;
+        width: 90%;
+        height: 70%;
+      }
+      .chat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+        bottom: 10px;
+        right: 10px;
+      }
+    }
+  </style>
+  <!-- Inkludera MSAL-biblioteket -->
+  <script src="https://alcdn.msauth.net/browser/2.19.0/js/msal-browser.min.js"></script>
+</head>
+<body>
+
+  <!-- Chattikon (här med en emoji) -->
+  <div class="chat-icon" onclick="toggleChat()">💬</div>
+
+  <!-- Modal fönster med inbäddad Copilot Studio-agent -->
+  <div id="chatModal" class="chat-modal">
+    <span class="close-btn" onclick="toggleChat()">&times;</span>
+    <iframe id="chatFrame" src="" frameborder="0"></iframe>
+  </div>
+
+  <script>
+    // MSAL-konfiguration med dina inställningar från Azure AD
+    const msalConfig = {
+      auth: {
+        clientId: "0d87ea11-6895-4948-a182-34a80fd7387f",  // Ersätt med ditt Application (client) ID
+        authority: "https://login.microsoftonline.com/4c98088a-8771-4b89-86fa-342cf75f4e28"  // Ersätt med ditt Directory (tenant) ID
+      }
+    };
+
+    // Skapa MSAL-klienten
+    const clientApplication = new msal.PublicClientApplication(msalConfig);
+    // Ange de scopes som behövs (t.ex. "User.Read")
+    const requestObj = { scopes: ["User.Read"] };
+
+    // Huvudfunktionen som kör SSO och sätter upp chattens URL
+    async function main() {
+      // Om ingen användare är inloggad, logga in automatiskt
+      if (clientApplication.getAllAccounts().length === 0) {
+        try {
+          await clientApplication.loginPopup(requestObj)
+            .then((response) => {
+              console.log("Inloggning lyckades:", response);
+            })
+            .catch((error) => {
+              console.error("Fel vid inloggning:", error);
+            });
+        } catch (error) {
+          console.error("LoginPopup misslyckades:", error);
+        }
+      }
+      
+      // Kopiera din token endpoint URL från Copilot Studio och ange den här
+      var tokenEndpointURL = "api://0d87ea11-6895-4948-a182-34a80fd7387f/User.Read";  // Ersätt med din faktiska token endpoint URL
+      
+      // Sätt upp ett unikt userId med ett eget prefix (max 64 tecken)
+      var account = clientApplication.getAllAccounts()[0];
+      var userId = account 
+            ? ("My-custom-prefix" + account.homeAccountId).substring(0, 64)
+            : (Math.random().toString() + Date.now().toString()).substring(0,64);
+      
+      // Ange BOT-ID från din Copilot Studio-agent (ändra om det behövs)
+      var botId = "crdc2_generativaSvarTest";
+      // Bygg URL:en till din agent, inkludera eventuellt tokenEndpointURL som en query-parameter om det krävs
+      var chatUrl = `https://copilotstudio.microsoft.com/environments/Default-4c98088a-8771-4b89-86fa-342cf75f4e28/bots/${botId}/webchat?__version__=2`;
+      
+      // Om du behöver skicka med tokenEndpointURL, gör så här (ta bort kommentaren om det behövs)
+      // chatUrl += `&tokenEndpoint=${encodeURIComponent(tokenEndpointURL)}`;
+      
+      // Sätt iframes src-attribut så att agenten laddas i modal-fönstret
+      document.getElementById("chatFrame").src = chatUrl;
+    }
+
+    // Funktion för att visa/dölja modal-fönstret
+    function toggleChat() {
+      var modal = document.getElementById("chatModal");
+      modal.style.display = (modal.style.display === "block") ? "none" : "block";
+    }
+
+    // Starta SSO- och agent-inställningen
+    main();
+  </script>
+  
+</body>
+</html>
